@@ -82,3 +82,19 @@ To generate the docs:
 
     make doc
 ```
+
+Memo Docker HAPROXY 1.8 with lua5.3
+=============
+Install lua5.3 before luarocks since didnt yet find a way to modifiy it on the fly without using env, else it will install 5.1
+Install lua-cjson 2.1.0 because last version require lua5.3 to be build with 5.1 compat, and the lua in the repo was not built this way
+```
+    apt-get update
+    apt-get install lua5.3 liblua5.3-dev
+    apt-get install luarocks
+    apt-get install libssl-dev
+    luarocks install lua-cjson 2.1.0
+    luarocks install luaposix
+    luarocks install luasocket
+    luarocks install luasec
+```
+

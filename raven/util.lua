@@ -99,12 +99,20 @@ function _M.parse_dsn(dsn, obj)
 
     assert(type(obj) == "table")
 
-    -- '{PROTOCOL}://{PUBLIC_KEY}:{SECRET_KEY}@{HOST}/{PATH}{PROJECT_ID}'
-    obj.protocol, obj.public_key, obj.secret_key, obj.long_host,
+    -- '{PROTOCOL}://{PUBLIC_KEY}@{HOST}/{PATH}{PROJECT_ID}'
+    obj.protocol, obj.public_key, obj.long_host,
     obj.path, obj.project_id =
-        string_match(dsn, "^([^:]+)://([^:]+):([^@]+)@([^/]+)(.*/)(.+)$")
+        string_match(dsn, "^([^:]+)://([^:@]+)@([^/]+)(.*/)(.+)$")
 
-    if obj.protocol and obj.public_key and obj.secret_key and obj.long_host
+    if obj.protocol == nil then
+      -- DEPRECATED but keep it
+      -- '{PROTOCOL}://{PUBLIC_KEY}:{SECRET_KEY}@{HOST}/{PATH}{PROJECT_ID}'
+      obj.protocol, obj.public_key, obj.secret_key, obj.long_host,
+      obj.path, obj.project_id =
+          string_match(dsn, "^([^:]+)://([^:]+):([^@]+)@([^/]+)(.*/)(.+)$")
+    end
+    
+    if obj.protocol and obj.public_key and obj.long_host
         and obj.project_id then
 
         local host, port, err = parse_host_port(obj.protocol, obj.long_host)
@@ -130,12 +138,21 @@ end
 -- @param dsn_object A @{parsed_dsn} table
 -- @return A Sentry authentication string
 function _M.generate_auth_header(dsn_object)
-    return string_format(
-        "Sentry sentry_version=6, sentry_client=%s, sentry_timestamp=%s, sentry_key=%s, sentry_secret=%s",
-        "raven-lua/" .. _VERSION,
-        iso8601(),
-        dsn_object.public_key,
-        dsn_object.secret_key)
+    if dsn_object.secret_key then
+        -- DEPRECATED
+        return string_format(
+            "Sentry sentry_version=6, sentry_client=%s, sentry_timestamp=%s, sentry_key=%s, sentry_secret=%s",
+            "raven-lua/" .. _VERSION,
+            iso8601(),
+            dsn_object.public_key,
+            dsn_object.secret_key)
+    else
+        return string_format(
+            "Sentry sentry_version=6, sentry_client=%s, sentry_timestamp=%s, sentry_key=%s",
+            "raven-lua/" .. _VERSION,
+            iso8601(),
+            dsn_object.public_key)
+     end
 end
 
 return _M
